@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GROVE — Deep Listening</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root {
+  --bg: #0A0908;
+  --surface: #111009;
+  --surface2: #181510;
+  --surface3: #201C14;
+  --gold: #C9963A;
+  --gold2: #E8B86D;
+  --gold3: #F5D49A;
+  --glow: rgba(201,150,58,0.15);
+  --text: #F0EBE0;
+  --text2: #9A9080;
+  --text3: #5A5248;
+  --border: rgba(201,150,58,0.08);
+  --border2: rgba(201,150,58,0.15);
+  --red: #9B3A2A;
+  --teal: #2A6B5A;
+  --violet: #3A2A6B;
+}
+
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;overflow:hidden;cursor:default}
+
+/* ═══ GRAIN OVERLAY ═══ */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9999;opacity:0.35;
+}
+
+/* ═══ LAYOUT ═══ */
+.shell{display:grid;grid-template-columns:64px 1fr 280px;height:100vh;position:relative}
+
+/* ═══ SIDEBAR ═══ */
+.sidebar{
+  display:flex;flex-direction:column;align-items:center;
+  padding:28px 0 24px;
+  border-right:1px solid var(--border);
+  background:linear-gradient(180deg,var(--surface) 0%,var(--bg) 100%);
+  gap:2px;z-index:10;
+}
+.logo{
+  font-family:'Cormorant Garamond',serif;
+  font-size:13px;letter-spacing:5px;font-weight:400;
+  writing-mode:vertical-lr;transform:rotate(180deg);
+  color:var(--gold2);text-transform:uppercase;
+  margin-bottom:28px;
+}
+.nav-btn{
+  width:40px;height:40px;border-radius:12px;
+  border:none;background:transparent;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  color:var(--text3);transition:all 0.2s;position:relative;
+}
+.nav-btn:hover{color:var(--gold2);background:var(--glow)}
+.nav-btn.on{color:var(--gold);background:rgba(201,150,58,0.12)}
+.nav-btn svg{width:17px;height:17px}
+.nav-tip{
+  position:absolute;left:52px;
+  background:var(--surface3);border:1px solid var(--border2);
+  color:var(--text);font-size:11px;padding:5px 10px;border-radius:6px;
+  white-space:nowrap;opacity:0;pointer-events:none;transition:opacity 0.15s;
+  font-family:'Outfit',sans-serif;letter-spacing:0.3px;
+}
+.nav-btn:hover .nav-tip{opacity:1}
+.nav-sep{width:24px;height:1px;background:var(--border);margin:8px 0}
+.nav-sp{flex:1}
+.avatar{
+  width:34px;height:34px;border-radius:50%;
+  background:linear-gradient(135deg,var(--gold),#7A4A1A);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:600;color:#1A0D00;cursor:pointer;
+  border:1px solid var(--gold);
+}
+
+/* ═══ SCREENS ═══ */
+.main{overflow:hidden;position:relative}
+.scr{display:none;height:100vh;flex-direction:column;animation:fadeIn 0.3s ease}
+.scr.on{display:flex}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ─── HOME ─── */
+.home-scroll{overflow-y:auto;flex:1;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.home-scroll::-webkit-scrollbar{width:3px}
+.home-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+.home-hero{
+  padding:40px 36px 32px;
+  border-bottom:1px solid var(--border);
+  position:relative;overflow:hidden;
+}
+.hero-orb{
+  position:absolute;top:-80px;right:-60px;
+  width:320px;height:320px;border-radius:50%;
+  background:radial-gradient(circle,rgba(201,150,58,0.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+.hero-time{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:10px}
+.hero-h{font-family:'Cormorant Garamond',serif;font-size:46px;font-weight:300;line-height:1.05;color:var(--text)}
+.hero-h em{font-style:italic;color:var(--gold2)}
+.hero-sub{font-size:13px;color:var(--text2);margin-top:8px;font-weight:300}
+
+.home-inner{padding:32px 36px 40px}
+
+.sec{margin-bottom:36px}
+.sec-hd{
+  display:flex;align-items:center;gap:12px;margin-bottom:18px;
+}
+.sec-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--text3);font-weight:500}
+.sec-line{flex:1;height:1px;background:var(--border)}
+
+/* Featured deep listen */
+.feat{
+  border-radius:20px;overflow:hidden;
+  background:linear-gradient(135deg,#0F0B05 0%,#1A1208 50%,#0D0E12 100%);
+  border:1px solid var(--border2);
+  cursor:pointer;position:relative;
+  transition:border-color 0.3s,transform 0.25s;
+}
+.feat:hover{border-color:rgba(201,150,58,0.35);transform:translateY(-2px)}
+.feat-inner{display:flex;gap:0;align-items:stretch}
+.feat-art{
+  width:160px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:52px;position:relative;
+  background:linear-gradient(135deg,#1A0A3A,#3A1A0A,#0A1A2A);
+}
+.feat-art::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent 60%,#0F0B05);
+}
+.feat-body{padding:28px 24px;flex:1}
+.feat-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:9px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--gold2);margin-bottom:14px;font-weight:500;
+}
+.ldot{width:6px;height:6px;border-radius:50%;background:#D94030;animation:ldot 1.8s infinite}
+@keyframes ldot{0%,100%{opacity:1}50%{opacity:0.3}}
+.feat-title{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:400;color:var(--text);margin-bottom:4px;line-height:1.1}
+.feat-artist{font-size:13px;color:var(--text2);margin-bottom:18px;font-weight:300}
+.feat-stats{display:flex;gap:20px}
+.feat-stat{font-size:11px;color:var(--text3)}
+.feat-stat span{color:var(--gold2);font-weight:500;margin-right:4px}
+.feat-arrow{
+  width:36px;height:36px;border-radius:50%;
+  border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  margin-top:auto;transition:all 0.2s;
+}
+.feat:hover .feat-arrow{background:var(--gold);border-color:var(--gold)}
+.feat:hover .feat-arrow svg{color:#1A0D00}
+.feat-arrow svg{width:14px;height:14px;color:var(--text3)}
+
+/* Album cards */
+.albs{display:flex;gap:14px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.albs::-webkit-scrollbar{display:none}
+.alb{flex:0 0 118px;cursor:pointer;transition:transform 0.2s}
+.alb:hover{transform:translateY(-4px)}
+.alb-img{
+  width:118px;height:118px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:34px;margin-bottom:10px;
+  border:1px solid var(--border);
+  transition:border-color 0.2s;
+}
+.alb:hover .alb-img{border-color:var(--border2)}
+.alb-t{font-size:12px;font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.alb-a{font-size:11px;color:var(--text3);margin-top:2px;font-weight:300}
+
+/* Mode pills */
+.modes{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px}
+.mode-pill{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 16px;border-radius:30px;
+  border:1px solid var(--border2);background:var(--surface2);
+  cursor:pointer;transition:all 0.2s;font-size:12px;color:var(--text2);
+}
+.mode-pill:hover{border-color:var(--gold);color:var(--gold2);background:rgba(201,150,58,0.08)}
+.mode-pill-icon{font-size:14px}
+
+/* Room */
+.room{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:16px;padding:20px;
+  display:flex;justify-content:space-between;align-items:center;
+  transition:border-color 0.2s;cursor:pointer;
+}
+.room:hover{border-color:var(--border2)}
+.room-left{}
+.room-name{font-size:15px;font-weight:500;color:var(--text);display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.room-meta{font-size:12px;color:var(--text3);font-weight:300}
+.room-avs{display:flex;margin-bottom:6px}
+.rv{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--bg);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;margin-right:-7px;color:var(--bg)}
+.join{
+  padding:10px 22px;border-radius:30px;
+  background:transparent;border:1px solid var(--border2);
+  color:var(--gold2);font-family:'Outfit',sans-serif;font-size:12px;
+  font-weight:500;cursor:pointer;transition:all 0.2s;letter-spacing:0.3px;
+}
+.join:hover{background:var(--gold);border-color:var(--gold);color:#1A0D00}
+
+/* ─── NOW PLAYING ─── */
+.np{padding:36px 36px 0;overflow-y:auto;flex:1;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.np::-webkit-scrollbar{width:3px}
+.np::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+.np-back{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--text3);cursor:pointer;margin-bottom:28px;
+  border:none;background:none;font-family:'Outfit',sans-serif;
+  transition:color 0.15s;font-weight:500;
+}
+.np-back:hover{color:var(--gold2)}
+
+/* Art */
+.art-wrap{
+  width:100%;aspect-ratio:16/9;border-radius:18px;
+  overflow:hidden;position:relative;margin-bottom:24px;
+  cursor:crosshair;border:1px solid var(--border);
+}
+.art-bg{
+  position:absolute;inset:0;
+  background:linear-gradient(135deg,#08041A 0%,#1A0A38 30%,#0A1830 60%,#1A0A08 100%);
+  display:flex;align-items:center;justify-content:center;
+}
+.art-glyph{font-size:80px;filter:drop-shadow(0 0 40px rgba(201,150,58,0.3))}
+.art-vignette{
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse at 60% 40%,rgba(201,150,58,0.06),transparent 60%),
+    radial-gradient(ellipse at 20% 70%,rgba(75,58,140,0.08),transparent 50%);
+}
+.art-scanlines{
+  position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);
+  pointer-events:none;
+}
+
+/* Anno dots */
+.adot{
+  position:absolute;width:28px;height:28px;border-radius:50%;
+  background:rgba(201,150,58,0.9);border:1.5px solid rgba(245,212,154,0.6);
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:600;color:#1A0D00;cursor:pointer;
+  transition:transform 0.15s,box-shadow 0.15s;z-index:5;
+  font-family:'Outfit',sans-serif;
+}
+.adot:hover{transform:scale(1.2);box-shadow:0 0 20px rgba(201,150,58,0.5)}
+.adot.ring::after{
+  content:'';position:absolute;inset:-5px;border-radius:50%;
+  border:1.5px solid var(--gold);opacity:0;
+  animation:ring 2.5s 0.5s infinite;
+}
+@keyframes ring{0%{opacity:0.5;transform:scale(1)}100%{opacity:0;transform:scale(1.8)}}
+
+.apop{
+  position:absolute;z-index:20;
+  background:rgba(10,9,8,0.92);backdrop-filter:blur(16px);
+  border:1px solid rgba(201,150,58,0.2);
+  border-radius:14px;padding:16px;width:220px;
+  pointer-events:none;opacity:0;
+  transform:translateY(6px);transition:all 0.2s;
+}
+.apop.show{opacity:1;transform:translateY(0);pointer-events:auto}
+.apop-lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold2);margin-bottom:6px;font-weight:500}
+.apop-t{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:400;color:var(--text);margin-bottom:6px}
+.apop-b{font-size:12px;color:var(--text2);line-height:1.65;font-weight:300}
+
+.art-hint{
+  position:absolute;bottom:12px;right:12px;z-index:5;
+  font-size:10px;letter-spacing:1px;text-transform:uppercase;
+  color:rgba(240,235,224,0.4);font-weight:500;
+  display:flex;align-items:center;gap:6px;
+  transition:color 0.2s;
+}
+.art-wrap:hover .art-hint{color:rgba(201,150,58,0.7)}
+.art-hint::before{content:'';width:6px;height:6px;border-radius:50%;border:1px solid currentColor;flex-shrink:0}
+
+/* Track meta */
+.np-meta{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
+.np-t{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:400;color:var(--text);line-height:1}
+.np-a{font-size:12px;color:var(--text3);margin-top:5px;font-weight:300;letter-spacing:0.3px}
+.np-like{
+  width:36px;height:36px;border-radius:50%;
+  border:1px solid var(--border2);background:transparent;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all 0.2s;flex-shrink:0;margin-top:4px;
+}
+.np-like:hover,.np-like.liked{border-color:var(--gold);background:rgba(201,150,58,0.1)}
+.np-like svg{width:14px;height:14px;color:var(--text3)}
+.np-like.liked svg{color:var(--gold)}
+
+/* Waveform */
+.wv{display:flex;align-items:center;gap:2px;height:36px;margin-bottom:12px;cursor:pointer}
+.wvb{flex:1;border-radius:2px;min-width:2px;transition:background 0.05s,height 0.05s}
+
+/* Progress */
+.prog-wrap{margin-bottom:20px}
+.prog-bar{height:2px;background:var(--surface3);border-radius:1px;cursor:pointer;position:relative;margin-bottom:7px}
+.prog-fill{height:2px;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:1px;position:relative;transition:width 0.1s}
+.prog-fill::after{content:'';position:absolute;right:-5px;top:-4px;width:10px;height:10px;border-radius:50%;background:var(--gold2);box-shadow:0 0 8px rgba(201,150,58,0.5)}
+.prog-times{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);font-family:'Outfit',monospace;letter-spacing:0.5px}
+
+/* Controls */
+.ctrls{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.cg{display:flex;align-items:center;gap:6px}
+.cb{width:38px;height:38px;border-radius:50%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text3);transition:all 0.2s}
+.cb:hover{color:var(--gold2);background:rgba(201,150,58,0.08)}
+.cb:active{transform:scale(0.9)}
+.cb svg{width:17px;height:17px}
+.playbtn{
+  width:56px;height:56px;border-radius:50%;
+  background:linear-gradient(135deg,var(--gold),#8A5A1A);
+  border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 30px rgba(201,150,58,0.25);
+  transition:all 0.2s;
+}
+.playbtn:hover{transform:scale(1.06);box-shadow:0 0 40px rgba(201,150,58,0.4)}
+.playbtn:active{transform:scale(0.96)}
+.playbtn svg{width:22px;height:22px;color:#1A0D00}
+
+.vol{display:flex;align-items:center;gap:10px;margin-bottom:24px;opacity:0.6}
+.vol svg{width:14px;height:14px;color:var(--text3);flex-shrink:0}
+input[type=range].vs{
+  flex:1;-webkit-appearance:none;height:2px;
+  background:linear-gradient(to right,var(--gold2) 70%,var(--surface3) 70%);
+  border-radius:1px;outline:none;cursor:pointer;
+}
+input[type=range].vs::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--gold2);cursor:pointer}
+
+/* Tabs */
+.tabs{display:flex;gap:0;background:var(--surface2);border-radius:12px;padding:4px;margin-bottom:20px;border:1px solid var(--border)}
+.tab{
+  flex:1;padding:8px 4px;border-radius:9px;border:none;background:transparent;
+  font-family:'Outfit',sans-serif;font-size:11px;font-weight:500;cursor:pointer;
+  color:var(--text3);transition:all 0.2s;letter-spacing:0.3px;
+}
+.tab.on{background:var(--surface3);color:var(--gold2);border:1px solid var(--border2)}
+
+.ipanel{display:none}
+.ipanel.on{display:block;animation:fadeIn 0.2s ease}
+
+.iitem{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);align-items:flex-start}
+.iitem:last-child{border:none}
+.iico{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:2px}
+.itag{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px;font-weight:500}
+.itext{font-size:12.5px;line-height:1.7;color:var(--text2);font-weight:300}
+.itext strong{color:var(--text);font-weight:500}
+
+/* ─── EXPLORE ─── */
+.expl-top{padding:40px 36px 24px;border-bottom:1px solid var(--border)}
+.expl-body{overflow-y:auto;padding:28px 36px 40px;flex:1;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.expl-body::-webkit-scrollbar{width:3px}
+.expl-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+.srch{
+  display:flex;align-items:center;gap:12px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:12px;padding:12px 16px;margin-bottom:28px;
+  transition:border-color 0.2s;
+}
+.srch:focus-within{border-color:var(--border2)}
+.srch svg{width:15px;height:15px;color:var(--text3);flex-shrink:0}
+.srch input{border:none;background:transparent;font-family:'Outfit',sans-serif;font-size:13px;color:var(--text);outline:none;flex:1;font-weight:300}
+.srch input::placeholder{color:var(--text3)}
+
+.gtiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:28px}
+.gt{
+  border-radius:16px;padding:20px;min-height:88px;
+  display:flex;align-items:flex-end;position:relative;overflow:hidden;
+  cursor:pointer;border:1px solid transparent;
+  transition:border-color 0.2s,transform 0.2s;font-size:14px;font-weight:500;color:var(--text);
+}
+.gt:hover{border-color:rgba(255,255,255,0.08);transform:scale(1.01)}
+.gt-glyph{position:absolute;top:14px;right:14px;font-size:24px;opacity:0.7}
+.gt-sub{font-size:10px;color:rgba(240,235,224,0.5);font-weight:300;margin-top:2px}
+
+.dcards{}
+.dc{
+  display:flex;align-items:center;gap:16px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:14px;padding:16px;margin-bottom:8px;
+  cursor:pointer;transition:all 0.2s;
+}
+.dc:hover{border-color:var(--border2);transform:translateX(3px)}
+.dc-art{width:50px;height:50px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.dc-t{font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px}
+.dc-d{font-size:11px;color:var(--text3);font-weight:300;line-height:1.5}
+.dc-arr{margin-left:auto;color:var(--text3);flex-shrink:0}
+.dc:hover .dc-arr{color:var(--gold2)}
+.dc-arr svg{width:14px;height:14px}
+
+/* ─── JOURNAL ─── */
+.jour-top{
+  padding:40px 36px 24px;
+  border-bottom:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:flex-end;
+}
+.jour-body{overflow-y:auto;padding:24px 36px 40px;flex:1;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.jour-body::-webkit-scrollbar{width:3px}
+.jour-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+.new-note{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 20px;border-radius:30px;
+  background:transparent;border:1px solid var(--border2);
+  color:var(--gold2);font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;
+  cursor:pointer;transition:all 0.2s;letter-spacing:0.3px;
+}
+.new-note:hover{background:rgba(201,150,58,0.1);border-color:var(--gold)}
+.new-note svg{width:12px;height:12px}
+
+.je{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:16px;padding:22px;margin-bottom:10px;cursor:pointer;
+  transition:all 0.2s;
+}
+.je:hover{border-color:var(--border2);transform:translateY(-1px)}
+.je-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.je-art{
+  width:42px;height:42px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+  flex-shrink:0;margin-right:12px;border:1px solid var(--border);
+}
+.je-left{display:flex;align-items:flex-start}
+.je-track{font-size:14px;font-weight:500;color:var(--text);margin-bottom:2px}
+.je-artist{font-size:11px;color:var(--text3);font-weight:300}
+.je-date{font-size:10px;color:var(--text3);font-family:'Outfit',monospace;flex-shrink:0}
+.je-text{font-size:13px;line-height:1.75;color:var(--text2);margin-bottom:14px;font-weight:300}
+.je-tags{display:flex;gap:6px;flex-wrap:wrap}
+.je-tag{font-size:10px;padding:3px 10px;border-radius:20px;border:1px solid var(--border);color:var(--text3);letter-spacing:0.3px}
+
+/* ─── RIGHT PANEL ─── */
+.rp{
+  border-left:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;
+  background:linear-gradient(180deg,var(--surface) 0%,var(--bg) 100%);
+}
+.rp-head{padding:28px 20px 18px;border-bottom:1px solid var(--border)}
+.rp-lbl{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);font-weight:500;margin-bottom:6px}
+.rp-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:var(--text)}
+.rp-sub{font-size:11px;color:var(--text3);margin-top:3px;font-weight:300}
+
+.ctx{
+  margin:14px;border-radius:14px;padding:18px;
+  background:linear-gradient(135deg,#0F0B05,#141010);
+  border:1px solid rgba(201,150,58,0.12);position:relative;overflow:hidden;
+}
+.ctx::before{
+  content:'';position:absolute;top:-20px;right:-20px;
+  width:80px;height:80px;border-radius:50%;
+  background:radial-gradient(circle,rgba(201,150,58,0.1),transparent);
+}
+.ctx-lbl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold2);margin-bottom:8px;font-weight:500}
+.ctx-t{font-size:12px;line-height:1.75;color:var(--text2);font-weight:300}
+
+.rp-scroll{overflow-y:auto;flex:1;padding:8px 0 16px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.rp-scroll::-webkit-scrollbar{width:2px}
+.rp-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:1px}
+
+.rp-sec{padding:12px 18px 6px;font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);font-weight:500}
+
+.qi{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:10px;margin:0 6px;cursor:pointer;transition:background 0.15s}
+.qi:hover{background:rgba(201,150,58,0.04)}
+.qi.cur{background:rgba(201,150,58,0.06)}
+.qi-n{font-size:10px;color:var(--text3);width:16px;text-align:center;font-family:'Outfit',monospace;flex-shrink:0}
+.qi-art{width:36px;height:36px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;border:1px solid var(--border)}
+.qi-info{flex:1;min-width:0}
+.qi-t{font-size:12px;font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qi-a{font-size:10px;color:var(--text3);font-weight:300}
+.qi-d{font-size:10px;color:var(--text3);font-family:'Outfit',monospace;flex-shrink:0}
+
+.mood-sec{padding:16px 18px}
+.mood-row{display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px}
+.mood-k{color:var(--text3);font-weight:300}
+.mood-v{color:var(--text2);font-weight:400}
+.mbar{height:2px;background:var(--surface3);border-radius:1px;margin-bottom:14px;overflow:hidden}
+.mfill{height:100%;border-radius:1px}
+
+/* ─── MODAL ─── */
+.overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);
+  z-index:100;align-items:center;justify-content:center;
+}
+.overlay.show{display:flex;animation:fadeIn 0.2s ease}
+.modal{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:22px;padding:34px;width:480px;max-width:90vw;
+  animation:slideUp 0.25s ease;
+}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-h{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:400;color:var(--text);margin-bottom:22px}
+.mi{
+  width:100%;background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;padding:12px 14px;font-family:'Outfit',sans-serif;font-size:13px;
+  color:var(--text);outline:none;margin-bottom:10px;transition:border-color 0.15s;font-weight:300;
+}
+.mi:focus{border-color:var(--border2)}
+textarea.mi{resize:vertical;min-height:100px;line-height:1.65}
+.modal-acts{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
+.mcancl{padding:10px 20px;border-radius:30px;border:1px solid var(--border);background:transparent;font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;cursor:pointer;color:var(--text3);transition:color 0.15s}
+.mcancl:hover{color:var(--text)}
+.msave{padding:10px 22px;border-radius:30px;border:none;background:linear-gradient(135deg,var(--gold),#8A5A1A);color:#1A0D00;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:opacity 0.2s}
+.msave:hover{opacity:0.9}
+
+/* ─── TOAST ─── */
+.toast{
+  position:fixed;bottom:28px;left:50%;
+  transform:translateX(-50%) translateY(60px);
+  background:var(--surface3);border:1px solid var(--border2);
+  color:var(--text);padding:11px 22px;border-radius:30px;font-size:12px;font-weight:400;
+  z-index:200;transition:transform 0.3s ease;pointer-events:none;white-space:nowrap;
+  box-shadow:0 8px 32px rgba(0,0,0,0.4);letter-spacing:0.3px;
+}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* Page title */
+.ptitle{font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:300;color:var(--text);margin-bottom:4px}
+.psub{font-size:12px;color:var(--text3);font-weight:300;letter-spacing:0.3px}
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+<!-- ═══ SIDEBAR ═══ -->
+<nav class="sidebar">
+  <div class="logo">Grove</div>
+  <button class="nav-btn on" id="nb-home" onclick="go('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span class="nav-tip">Home</span>
+  </button>
+  <button class="nav-btn" id="nb-np" onclick="go('np')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+    <span class="nav-tip">Now Playing</span>
+  </button>
+  <button class="nav-btn" id="nb-explore" onclick="go('explore')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <span class="nav-tip">Explore</span>
+  </button>
+  <button class="nav-btn" id="nb-journal" onclick="go('journal')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    <span class="nav-tip">Journal</span>
+  </button>
+  <div class="nav-sep"></div>
+  <div class="nav-sp"></div>
+  <div class="avatar">A</div>
+</nav>
+
+<!-- ═══ MAIN ═══ -->
+<main class="main">
+
+<!-- HOME -->
+<div class="scr on" id="scr-home">
+  <div class="home-hero">
+    <div class="hero-orb"></div>
+    <div class="hero-time" id="hero-time">Monday · Evening</div>
+    <div class="hero-h">Good to hear<br>you, <em>Ayo.</em></div>
+    <div class="hero-sub">47 annotations this week — you're listening deeply.</div>
+  </div>
+  <div class="home-scroll">
+  <div class="home-inner">
+
+    <div class="sec">
+      <div class="sec-hd"><div class="sec-label">Deep listen of the week</div><div class="sec-line"></div></div>
+      <div class="feat" onclick="go('np')">
+        <div class="feat-inner">
+          <div class="feat-art">🎷</div>
+          <div class="feat-body">
+            <div class="feat-badge"><span class="ldot"></span> Now in session</div>
+            <div class="feat-title">Kind of Blue</div>
+            <div class="feat-artist">Miles Davis · 1959 · Modal Jazz</div>
+            <div class="feat-stats">
+              <div class="feat-stat"><span>47</span>annotations</div>
+              <div class="feat-stat"><span>3</span>sessions</div>
+              <div class="feat-stat"><span>2:08</span>into track 1</div>
+            </div>
+            <div class="feat-arrow" style="margin-top:18px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-hd"><div class="sec-label">Continue listening</div><div class="sec-line"></div></div>
+      <div class="albs">
+        <div class="alb" onclick="go('np')"><div class="alb-img" style="background:linear-gradient(135deg,#0A0520,#2A1060);">🌊</div><div class="alb-t">Zombie</div><div class="alb-a">Fela Kuti</div></div>
+        <div class="alb" onclick="go('np')"><div class="alb-img" style="background:linear-gradient(135deg,#061A10,#1A4A30);">🌿</div><div class="alb-t">Lotus</div><div class="alb-a">Little Simz</div></div>
+        <div class="alb" onclick="go('np')"><div class="alb-img" style="background:linear-gradient(135deg,#1A0505,#4A1010);">🔥</div><div class="alb-t">TPAB</div><div class="alb-a">Kendrick</div></div>
+        <div class="alb" onclick="go('np')"><div class="alb-img" style="background:linear-gradient(135deg,#050A1A,#102040);">🌌</div><div class="alb-t">Innervisions</div><div class="alb-a">Wonder</div></div>
+        <div class="alb" onclick="go('np')"><div class="alb-img" style="background:linear-gradient(135deg,#100800,#402810);">☀️</div><div class="alb-t">Work of Art</div><div class="alb-a">Asake</div></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-hd"><div class="sec-label">Ways to listen</div><div class="sec-line"></div></div>
+      <div class="modes">
+        <div class="mode-pill" onclick="go('np')"><span class="mode-pill-icon">🎵</span>Annotate moments</div>
+        <div class="mode-pill" onclick="go('np')"><span class="mode-pill-icon">📖</span>Liner notes</div>
+        <div class="mode-pill" onclick="go('np')"><span class="mode-pill-icon">🧠</span>Music theory</div>
+        <div class="mode-pill" onclick="go('np')"><span class="mode-pill-icon">🕰️</span>Historical context</div>
+        <div class="mode-pill"><span class="mode-pill-icon">👥</span>Listen together</div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-hd"><div class="sec-label">Live room</div><div class="sec-line"></div></div>
+      <div class="room">
+        <div class="room-left">
+          <div class="room-name"><span class="ldot"></span> Jazz After Dark</div>
+          <div class="room-avs">
+            <div class="rv" style="background:#4B3A8C;">T</div>
+            <div class="rv" style="background:#9B3A2A;">R</div>
+            <div class="rv" style="background:#2A6B5A;">A</div>
+            <div class="rv" style="background:#8A5A1A;">M</div>
+            <div class="rv" style="background:#185FA5;">K</div>
+          </div>
+          <div class="room-meta">14 listening together · Introspective energy</div>
+        </div>
+        <button class="join">Join room</button>
+      </div>
+    </div>
+
+  </div>
+  </div>
+</div>
+
+<!-- NOW PLAYING -->
+<div class="scr" id="scr-np">
+<div class="np">
+  <button class="np-back" onclick="go('home')">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Back
+  </button>
+
+  <div class="art-wrap" id="artWrap" onclick="onArtClick(event)">
+    <div class="art-bg">
+      <div class="art-vignette"></div>
+      <div class="art-glyph">🎷</div>
+      <div class="art-scanlines"></div>
+    </div>
+    <div class="adot ring" style="top:26%;left:21%;" onclick="toggleAnn(this,'Modal shift','Davis moves to D Dorian — gravity-free, open. The music refuses to resolve.',event)">1</div>
+    <div class="adot" style="top:60%;left:66%;" onclick="toggleAnn(this,'Breath','Coltrane plays into silence. The rests are doing the work.',event)">2</div>
+    <div class="adot" style="top:80%;left:40%;" onclick="toggleAnn(this,'Weightlessness','Bill Evans drops to half-time. The groove becomes air.',event)">3</div>
+    <div class="apop" id="apop">
+      <div class="apop-lbl">Annotation</div>
+      <div class="apop-t" id="apop-t"></div>
+      <div class="apop-b" id="apop-b"></div>
+    </div>
+    <div class="art-hint">Click anywhere to annotate</div>
+  </div>
+
+  <div class="np-meta">
+    <div>
+      <div class="np-t">So What</div>
+      <div class="np-a">Miles Davis · Kind of Blue · 1959</div>
+    </div>
+    <button class="np-like" id="likeBtn" onclick="toggleLike()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+    </button>
+  </div>
+
+  <div class="wv" id="wv" onclick="seekWv(event)"></div>
+
+  <div class="prog-wrap">
+    <div class="prog-bar" id="pbar" onclick="seekBar(event)">
+      <div class="prog-fill" id="pfill" style="width:37%;"></div>
+    </div>
+    <div class="prog-times">
+      <span id="etime">2:03</span>
+      <span>5:33</span>
+    </div>
+  </div>
+
+  <div class="ctrls">
+    <div class="cg">
+      <button class="cb" onclick="toast('Shuffle on')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg></button>
+      <button class="cb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg></button>
+    </div>
+    <button class="playbtn" id="pbtn" onclick="togglePlay()">
+      <svg viewBox="0 0 24 24" fill="currentColor" id="pico"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    </button>
+    <div class="cg">
+      <button class="cb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg></button>
+      <button class="cb" onclick="toast('Loop on')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg></button>
+    </div>
+  </div>
+
+  <div class="vol">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/></svg>
+    <input type="range" class="vs" min="0" max="100" value="72" oninput="updVol(this.value)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 010 7.07"/><path d="M19.07 4.93a10 10 0 010 14.14"/></svg>
+  </div>
+
+  <div class="tabs">
+    <button class="tab on" onclick="showTab('music',this)">Music</button>
+    <button class="tab" onclick="showTab('history',this)">History</button>
+    <button class="tab" onclick="showTab('narrative',this)">Narrative</button>
+    <button class="tab" onclick="showTab('next',this)">Listen Next</button>
+  </div>
+
+  <div class="ipanel on" id="tab-music">
+    <div class="iitem"><div class="iico" style="background:rgba(75,58,140,0.2);color:#8470CC;">♩</div><div><div class="itag">Structure</div><div class="itext">Built on D Dorian mode — a scale that creates an open, floating feeling. No tension, no resolution. Just color.</div></div></div>
+    <div class="iitem"><div class="iico" style="background:rgba(201,150,58,0.15);color:var(--gold2);">♭</div><div><div class="itag">Harmony</div><div class="itext">Only <strong>two chords</strong> in the entire piece. Most jazz used 30+. Davis stripped it to pure space.</div></div></div>
+    <div class="iitem"><div class="iico" style="background:rgba(155,58,42,0.2);color:#D06050;">⟳</div><div><div class="itag">Tempo</div><div class="itext">At 136 BPM, the rhythm section walks with such confidence that soloists play <strong>across</strong> the beat, not with it.</div></div></div>
+    <div class="iitem" style="border:none"><div class="iico" style="background:rgba(42,107,90,0.2);color:#5ABIA;">∿</div><div><div class="itag">Dynamics</div><div class="itext">Never exceeds mezzo-forte. Restraint makes every gesture feel enormous. Volume as punctuation.</div></div></div>
+  </div>
+  <div class="ipanel" id="tab-history">
+    <div class="iitem"><div class="iico" style="background:rgba(155,58,42,0.2);color:#D06050;">📅</div><div><div class="itag">Origin</div><div class="itext">Two sessions — March 2 and April 22, 1959. Davis gave musicians almost <strong>no written music</strong>. The spontaneity is the record.</div></div></div>
+    <div class="iitem"><div class="iico" style="background:rgba(75,58,140,0.2);color:#8470CC;">🌍</div><div><div class="itag">Influence</div><div class="itext">Modal jazz opened the door to Coltrane's sheets of sound, ambient music, and everything in between. This is the exact pivot point.</div></div></div>
+    <div class="iitem" style="border:none"><div class="iico" style="background:rgba(201,150,58,0.15);color:var(--gold2);">👥</div><div><div class="itag">Ensemble</div><div class="itext">Coltrane, Adderley, Evans, Kelly, Chambers, Cobb. Six at their absolute peak, playing as one instrument.</div></div></div>
+  </div>
+  <div class="ipanel" id="tab-narrative">
+    <div style="padding:16px 0;font-size:13px;line-height:2;color:var(--text2);font-weight:300">
+      <p style="margin-bottom:12px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);font-weight:500;">An instrumental with a story</p>
+      <p style="margin-bottom:10px"><strong style="color:var(--text);">0:00 – 1:28</strong> &nbsp;The theme. Weightless. An invitation into a room with no walls.</p>
+      <p style="margin-bottom:10px"><strong style="color:var(--text);">1:28 – 3:20</strong> &nbsp;Miles takes the first solo. The space between notes is the message.</p>
+      <p style="margin-bottom:10px"><strong style="color:var(--text);">3:20 – 4:42</strong> &nbsp;Coltrane enters. The temperature rises. Longer sentences, more urgency.</p>
+      <p><strong style="color:var(--text);">4:42 – 5:33</strong> &nbsp;The return. Exactly where we started, yet we are changed for having been there.</p>
+    </div>
+  </div>
+  <div class="ipanel" id="tab-next">
+    <div class="iitem"><div class="iico" style="font-size:16px;background:linear-gradient(135deg,#0d0820,#2A1060);">🌊</div><div><div class="itag">Same depth</div><div class="itext"><strong>A Love Supreme</strong> — Coltrane. The modal universe pushed to its absolute spiritual limit. Four movements, one devotion.</div></div></div>
+    <div class="iitem"><div class="iico" style="font-size:16px;background:linear-gradient(135deg,#061A10,#1A4A30);">🌿</div><div><div class="itag">Similar structure</div><div class="itext"><strong>Maiden Voyage</strong> — Hancock. Modal harmony as oceanic imagery. Liquid, drifting, luminous.</div></div></div>
+    <div class="iitem" style="border:none"><div class="iico" style="font-size:16px;background:linear-gradient(135deg,#100800,#402810);">☀️</div><div><div class="itag">Unexpected bridge</div><div class="itext"><strong>Ze Meke</strong> — Mulatu Astatke. Ethiopian jazz. Same modal spaciousness, entirely different gravity.</div></div></div>
+  </div>
+
+</div>
+</div>
+
+<!-- EXPLORE -->
+<div class="scr" id="scr-explore">
+  <div class="expl-top">
+    <div class="ptitle">Explore</div>
+    <div class="psub">Music with depth, waiting to be discovered</div>
+  </div>
+  <div class="expl-body">
+    <div class="srch">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Artist, album, era, mood, theme..." oninput="if(this.value.length>2)toast('Searching for "'+this.value+'"...')">
+    </div>
+    <div class="sec-hd"><div class="sec-label">Browse by world</div><div class="sec-line"></div></div>
+    <div class="gtiles">
+      <div class="gt" style="background:linear-gradient(135deg,#061A10,#0F3A22);" onclick="toast('Loading Afrobeat...')"><div class="gt-glyph">🌍</div>Afrobeat<div class="gt-sub">Fela, Burna, Wizkid</div></div>
+      <div class="gt" style="background:linear-gradient(135deg,#060E1A,#102040);" onclick="toast('Loading Jazz...')"><div class="gt-glyph">🌊</div>Jazz<div class="gt-sub">Miles, Coltrane, Hancock</div></div>
+      <div class="gt" style="background:linear-gradient(135deg,#0A0618,#1A1038);" onclick="toast('Loading Electronic...')"><div class="gt-glyph">🔮</div>Electronic<div class="gt-sub">Arca, Four Tet, Burial</div></div>
+      <div class="gt" style="background:linear-gradient(135deg,#1A0505,#3A1010);" onclick="toast('Loading Hip-Hop...')"><div class="gt-glyph">🔥</div>Hip-Hop<div class="gt-sub">Kendrick, DOOM, Nas</div></div>
+      <div class="gt" style="background:linear-gradient(135deg,#18060E,#381020);" onclick="toast('Loading Soul & R&B...')"><div class="gt-glyph">💫</div>Soul & R&B<div class="gt-sub">D'Angelo, Sade, Erykah</div></div>
+      <div class="gt" style="background:linear-gradient(135deg,#0A0A08,#1E1E18);" onclick="toast('Loading Classical...')"><div class="gt-glyph">🎻</div>Classical<div class="gt-sub">Satie, Arvo Pärt, Bach</div></div>
+    </div>
+    <div class="sec-hd"><div class="sec-label">Curated deep listens</div><div class="sec-line"></div></div>
+    <div class="dc" onclick="toast('Opening: Drums as Language')"><div class="dc-art" style="background:linear-gradient(135deg,#061A10,#402810);">🥁</div><div><div class="dc-t">Drums as Language</div><div class="dc-d">Tony Williams, Elvin Jones, Questlove — percussion as melody · 6 tracks</div></div><div class="dc-arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div></div>
+    <div class="dc" onclick="toast('Opening: The Art of the Sample')"><div class="dc-art" style="background:linear-gradient(135deg,#1A0505,#1A1038);">🎤</div><div><div class="dc-t">The Art of the Sample</div><div class="dc-d">Trace the DNA of hip-hop's most iconic breaks · 10 tracks</div></div><div class="dc-arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div></div>
+    <div class="dc" onclick="toast('Opening: Lagos to London')"><div class="dc-art" style="background:linear-gradient(135deg,#060E1A,#1A1038);">🌙</div><div><div class="dc-t">Lagos to London</div><div class="dc-d">How West African rhythms shaped global pop · 8 tracks</div></div><div class="dc-arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div></div>
+    <div class="dc" onclick="toast('Opening: Unsung: Bass Players')"><div class="dc-art" style="background:linear-gradient(135deg,#100800,#1A1038);">🎸</div><div><div class="dc-t">Unsung: Bass Players</div><div class="dc-d">Jaco, Mingus, Thundercat — the melodic foundation · 9 tracks</div></div><div class="dc-arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div></div>
+  </div>
+</div>
+
+<!-- JOURNAL -->
+<div class="scr" id="scr-journal">
+  <div class="jour-top">
+    <div><div class="ptitle">My Journal</div><div class="psub">Thoughts captured while listening</div></div>
+    <button class="new-note" onclick="openModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New note
+    </button>
+  </div>
+  <div class="jour-body" id="jbody"></div>
+</div>
+
+</main>
+
+<!-- ═══ RIGHT PANEL ═══ -->
+<aside class="rp">
+  <div class="rp-head">
+    <div class="rp-lbl">Now playing</div>
+    <div class="rp-title">Kind of Blue</div>
+    <div class="rp-sub">Miles Davis · 1959 · 6 tracks</div>
+  </div>
+  <div class="ctx">
+    <div class="ctx-lbl">Deep context</div>
+    <div class="ctx-t">Davis gave the musicians almost no written music — just modal scales and open space. The spontaneity you hear is the record itself.</div>
+  </div>
+  <div class="rp-scroll">
+    <div class="rp-sec">Tracklist</div>
+    <div class="qi cur" onclick="go('np')"><div class="qi-n" style="color:var(--gold);">▶</div><div class="qi-art" style="background:linear-gradient(135deg,#08041A,#2A1060);">🎷</div><div class="qi-info"><div class="qi-t">So What</div><div class="qi-a">Miles Davis</div></div><div class="qi-d">5:33</div></div>
+    <div class="qi" onclick="go('np')"><div class="qi-n">2</div><div class="qi-art" style="background:linear-gradient(135deg,#061A10,#1A4A30);">🎹</div><div class="qi-info"><div class="qi-t">Freddie Freeloader</div><div class="qi-a">Miles Davis</div></div><div class="qi-d">9:46</div></div>
+    <div class="qi" onclick="go('np')"><div class="qi-n">3</div><div class="qi-art" style="background:linear-gradient(135deg,#1A0505,#4A1010);">🎺</div><div class="qi-info"><div class="qi-t">Blue in Green</div><div class="qi-a">Miles Davis</div></div><div class="qi-d">5:37</div></div>
+    <div class="qi" onclick="go('np')"><div class="qi-n">4</div><div class="qi-art" style="background:linear-gradient(135deg,#050A1A,#102040);">🥁</div><div class="qi-info"><div class="qi-t">All Blues</div><div class="qi-a">Miles Davis</div></div><div class="qi-d">11:33</div></div>
+    <div class="qi" onclick="go('np')"><div class="qi-n">5</div><div class="qi-art" style="background:linear-gradient(135deg,#0A0618,#1A1038);">🎷</div><div class="qi-info"><div class="qi-t">Flamenco Sketches</div><div class="qi-a">Miles Davis</div></div><div class="qi-d">9:26</div></div>
+    <div class="rp-sec" style="margin-top:8px;">Mood analysis</div>
+    <div class="mood-sec">
+      <div class="mood-row"><span class="mood-k">Energy</span><span class="mood-v">Contemplative</span></div>
+      <div class="mbar"><div class="mfill" style="width:32%;background:linear-gradient(90deg,var(--violet),#8470CC);"></div></div>
+      <div class="mood-row"><span class="mood-k">Complexity</span><span class="mood-v">Advanced</span></div>
+      <div class="mbar"><div class="mfill" style="width:88%;background:linear-gradient(90deg,var(--teal),var(--violet));"></div></div>
+      <div class="mood-row"><span class="mood-k">Mood</span><span class="mood-v">Introspective</span></div>
+      <div class="mbar"><div class="mfill" style="width:65%;background:linear-gradient(90deg,var(--red),var(--gold));"></div></div>
+      <div class="mood-row"><span class="mood-k">Tempo feel</span><span class="mood-v">Floating</span></div>
+      <div class="mbar" style="margin-bottom:0"><div class="mfill" style="width:42%;background:linear-gradient(90deg,#185FA5,var(--violet));"></div></div>
+    </div>
+  </div>
+</aside>
+
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="modal" onclick="closeOuter(event)">
+  <div class="modal">
+    <div class="modal-h">New journal note</div>
+    <input class="mi" type="text" placeholder="Track or album..." id="mnote-track">
+    <textarea class="mi" placeholder="What are you hearing? What does it make you think or feel?" id="mnote-text"></textarea>
+    <div class="modal-acts">
+      <button class="mcancl" onclick="closeModal()">Cancel</button>
+      <button class="msave" onclick="saveNote()">Save note</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ──
+let playing=false, prog=37, tick=null;
+const TOTAL=333;
+let liked=false;
+let activeAnn=null;
+
+const entries=[
+  {art:'🎷',track:'So What',artist:'Miles Davis · Kind of Blue',date:'Mar 22',text:'The silence between Miles' notes does as much work as the notes themselves. He plays around the beat — never quite landing where you expect. Restraint as mastery.',tags:['modal jazz','restraint','space']},
+  {art:'🌍',track:'Sorrow Tears & Blood',artist:'Fela Kuti',date:'Mar 18',text:'How can something this funky be this political? The horns are a protest march and a dance floor simultaneously. Every time I catch the groove it moves on me.',tags:['afrobeat','polyrhythm','resistance']},
+  {art:'🔥',track:'Alright',artist:'Kendrick Lamar · TPAB',date:'Mar 14',text:'Third listen. Finally hearing the Thundercat bassline as its own melody. Kendrick's cadence shifts three times in the first verse alone. Layers I keep finding.',tags:['hip-hop','production','layers']},
+  {art:'🌿',track:'Lotus (Interlude)',artist:'Little Simz',date:'Mar 9',text:'Simz uses orchestral strings the way rappers used to use soul samples — not as backdrop but as counterpoint. A conversation between her voice and the arrangement.',tags:['uk rap','orchestral','voice']},
+];
+
+// ── NAV ──
+function go(id){
+  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('scr-'+id).classList.add('on');
+  const nb=document.getElementById('nb-'+id);
+  if(nb)nb.classList.add('on');
+  if(id==='journal')renderJ();
+}
+
+// ── PLAYER ──
+function togglePlay(){
+  playing=!playing;
+  const ico=document.getElementById('pico');
+  if(playing){
+    ico.innerHTML='<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+    tick=setInterval(()=>{prog=Math.min(100,prog+100/TOTAL/10);updP();},100);
+  } else {
+    ico.innerHTML='<polygon points="5 3 19 12 5 21 5 3"/>';
+    clearInterval(tick);
+  }
+}
+function updP(){
+  document.getElementById('pfill').style.width=prog+'%';
+  const s=Math.round(TOTAL*prog/100);
+  document.getElementById('etime').textContent=fmt(s);
+  updWv();
+}
+function fmt(s){return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
+function seekBar(e){const r=e.currentTarget.getBoundingClientRect();prog=Math.max(0,Math.min(100,(e.clientX-r.left)/r.width*100));updP()}
+function seekWv(e){const r=document.getElementById('wv').getBoundingClientRect();prog=Math.max(0,Math.min(100,(e.clientX-r.left)/r.width*100));updP()}
+function updVol(v){const s=document.querySelector('.vs');s.style.background=`linear-gradient(to right,var(--gold2) ${v}%,var(--surface3) ${v}%)`}
+function toggleLike(){liked=!liked;const b=document.getElementById('likeBtn');b.classList.toggle('liked',liked);b.querySelector('svg').style.fill=liked?'var(--gold)':'none';toast(liked?'Added to liked tracks':'Removed from liked')}
+
+// ── WAVEFORM ──
+const wvH=[];
+function buildWv(){
+  const w=document.getElementById('wv');w.innerHTML='';
+  for(let i=0;i<56;i++){
+    const h=8+Math.random()*26;wvH.push(h);
+    const b=document.createElement('div');b.className='wvb';
+    b.style.height=Math.round(h)+'px';
+    b.style.background=(i/56<prog/100)?'var(--gold2)':'var(--surface3)';
+    w.appendChild(b);
+  }
+}
+function updWv(){
+  const bars=document.querySelectorAll('.wvb');
+  bars.forEach((b,i)=>{b.style.background=(i/bars.length<prog/100)?'var(--gold2)':'var(--surface3)'});
+}
+
+// ── ANNOTATIONS ──
+function toggleAnn(dot,title,body,e){
+  e.stopPropagation();
+  const p=document.getElementById('apop');
+  if(activeAnn===dot&&p.classList.contains('show')){p.classList.remove('show');activeAnn=null;return}
+  document.getElementById('apop-t').textContent=title;
+  document.getElementById('apop-b').textContent=body;
+  const wr=document.getElementById('artWrap').getBoundingClientRect();
+  const dr=dot.getBoundingClientRect();
+  let l=(dr.left-wr.left+32),tp=(dr.top-wr.top-10);
+  if(l+230>wr.width)l=dr.left-wr.left-235;
+  if(tp<0)tp=dr.top-wr.top+35;
+  p.style.left=l+'px';p.style.top=tp+'px';
+  p.classList.add('show');activeAnn=dot;
+}
+function onArtClick(e){
+  if(e.target.classList.contains('adot'))return;
+  const p=document.getElementById('apop');
+  if(p.classList.contains('show')){p.classList.remove('show');activeAnn=null;return}
+  const wr=e.currentTarget.getBoundingClientRect();
+  const x=((e.clientX-wr.left)/wr.width*100).toFixed(1);
+  const y=((e.clientY-wr.top)/wr.height*100).toFixed(1);
+  const d=document.createElement('div');d.className='adot';
+  d.textContent=document.querySelectorAll('.adot').length+1;
+  d.style.left=x+'%';d.style.top=y+'%';
+  d.onclick=ev=>toggleAnn(d,'Your note','Tap to label this moment.',ev);
+  e.currentTarget.appendChild(d);
+  toast('Annotation placed');
+}
+document.addEventListener('click',e=>{if(!e.target.classList.contains('adot')){const p=document.getElementById('apop');if(p)p.classList.remove('show');activeAnn=null}});
+
+// ── TABS ──
+function showTab(name,btn){
+  document.querySelectorAll('.ipanel').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  document.getElementById('tab-'+name).classList.add('on');btn.classList.add('on');
+}
+
+// ── JOURNAL ──
+function renderJ(){
+  document.getElementById('jbody').innerHTML=entries.map(e=>`
+    <div class="je">
+      <div class="je-top">
+        <div class="je-left"><div class="je-art">${e.art}</div><div><div class="je-track">${e.track}</div><div class="je-artist">${e.artist}</div></div></div>
+        <div class="je-date">${e.date}</div>
+      </div>
+      <div class="je-text">${e.text}</div>
+      <div class="je-tags">${e.tags.map(t=>`<span class="je-tag">${t}</span>`).join('')}</div>
+    </div>`).join('');
+}
+function openModal(){document.getElementById('modal').classList.add('show');document.getElementById('mnote-track').focus()}
+function closeModal(){document.getElementById('modal').classList.remove('show')}
+function closeOuter(e){if(e.target===document.getElementById('modal'))closeModal()}
+function saveNote(){
+  const tr=document.getElementById('mnote-track').value.trim();
+  const tx=document.getElementById('mnote-text').value.trim();
+  if(!tx){toast('Write something first');return}
+  const d=new Date(),mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  entries.unshift({art:'✍️',track:tr||'Untitled',artist:'Added now',date:mo[d.getMonth()]+' '+d.getDate(),text:tx,tags:['new note']});
+  document.getElementById('mnote-track').value='';document.getElementById('mnote-text').value='';
+  closeModal();renderJ();toast('Note saved');
+}
+
+// ── TOAST ──
+let toastT;
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2500)}
+
+// ── HERO TIME ──
+function setTime(){const h=new Date().getHours();const p=h<12?'Morning':h<17?'Afternoon':h<21?'Evening':'Night';const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];document.getElementById('hero-time').textContent=days[new Date().getDay()]+' · '+p}
+
+// ── INIT ──
+buildWv();renderJ();setTime();
+</script>
+</body>
+</html>
